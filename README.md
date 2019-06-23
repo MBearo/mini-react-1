@@ -112,4 +112,5 @@ Component.prototype.forceUpdate = function (callback) {
 ```
 
 ## diff
+<img src='http://ww1.sinaimg.cn/large/b44313e1ly1g4b70er89lj20ah05jt8o.jpg'>
 <img src="http://ww1.sinaimg.cn/large/b44313e1ly1g4b6xjublcj21a21nmn3t.jpg">
