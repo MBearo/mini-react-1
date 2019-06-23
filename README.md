@@ -59,3 +59,54 @@ export function createVNode(type, props, key, ref) {
 	return vnode;
 }
 ```
+
+## 组件Component
+react中的所有的class组件都继承Component, Component构造函数初始化了props、context、state等实例属性
+
+```js
+export function Component(props, context) {
+  this.props = props
+  this.context = context
+  if (this.state == null) this.state = {}
+  this.dirty = true
+  this._renderCallbacks = []
+}
+```
+还有setState的原型方法, setState是异步的, 它会将一个多个setState都合并都已一个this.nextState上,
+把callback推入一个队列中, enqueueRender会利用Promise的异步执行更新
+```js
+Component.prototype.setState = function (update, callback) {
+  // 确定_nextState值
+  let s = (this._nextState!==this.state && this._nextState) || (this._nextState = assign({}, this.state))
+
+  // 合并update的内容到state上
+  if (typeof update !== 'function' || (update = update(s, this.props))) {
+    assign(s, update)
+  }
+
+  if (update==null) return
+
+  if (this._vnode) {
+    if (callback) this._renderCallbacks.push(callback)
+    enqueueRender(this)
+  }
+}
+```
+
+`forceUpdate`用来更新setState之后的视图, 利用diff对比新旧vnode更新, 这时的state还是旧的,新的存在nextState里, 完成一次更新
+```js
+Component.prototype.forceUpdate = function (callback) {
+  let vnode = this._vnode, dom = this._vnode._dom, parentDom = this._parentDom
+  if (parentDom) {
+    const force = callback!==false
+
+    let mounts = []
+    dom = diff(parentDom, vnode, vnode, this._context, mounts, this.__ancestorComponent, dom)
+    if (dom != null && dom.parentNode !== parentDom) {
+      parentDom.appendChild(dom)
+    }
+    commitRoot(mounts, vnode)
+  }
+  if (callback) callback()
+}
+```
